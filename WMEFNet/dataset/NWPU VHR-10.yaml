@@ -1,0 +1,24 @@
+# dataset path
+path: <drive>:\<project_name>\<version>\<main_folder>
+train: <drive>:\<project_name>\<version>\<main_folder>\dataset\NWPU-VHR-10\train\images
+# ./dataset/images/train
+val: <drive>:\<project_name>\<version>\<main_folder>\NWPU-VHR-10\val\images
+# ./dataset/images/val
+test: <drive>:\<project_name>\<version>\<main_folder>\NWPU-VHR-10\test\images
+# ./dataset/images/test
+
+# number of classes
+nc: 10
+
+# class names
+names:
+  0: airplane
+  1: baseball-diamond
+  2: basketball-court
+  3: bridge
+  4: ground-track-field
+  5: harbor
+  6: overpass
+  7: parking-lot
+  8: soccer-ball-field
+  9: tennis-court

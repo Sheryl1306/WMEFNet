@@ -1,0 +1,23 @@
+# dataset path Public Dataset
+path: <drive>:\<project_name>\<version>\<main_folder>
+
+train: <drive>:\<project_name>\<version>\<main_folder>\dataset\AI-TOD\train\images
+# ./dataset/images/train
+val: <drive>:\<project_name>\<version>\<main_folder>\dataset\AI-TOD\val\images
+#./dataset/images/val
+test: <drive>:\<project_name>\<version>\<main_folder>\dataset\AI-TOD\test\images
+#./dataset/images/test
+
+# number of classes
+nc: 8
+
+# class names
+names:
+  0: airplane
+  1: bridge
+  2: storage-tank
+  3: ship
+  4: swimming-pool
+  5: vehicle
+  6: person
+  7: wind-mill

@@ -1,0 +1,66 @@
+# RT-DETR
+#WMEFNet
+# Parameters
+nc: 80  # number of classes
+scales: # model compound scaling constants
+  # [depth, width, max_channels]
+  l: [1.00, 1.00, 1024]
+fusion_mode: bifpn
+node_mode: RepC3
+head_channel: 256
+
+#Sheryl
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, ConvNormLayer, [32, 3, 2, None, False, 'relu']] # 0-P1/2
+  - [-1, 1, ConvNormLayer, [32, 3, 1, None, False, 'relu']] # 1
+  - [-1, 1, ConvNormLayer, [64, 3, 1, None, False, 'relu']] # 2
+  - [-1, 1, nn.MaxPool2d, [3, 2, 1]] # 3-P2/4
+
+  - [-1, 1, MutilScaleEdgeInfoGenetator, [[64, 128, 256]]] # 4-P2
+  - [4, 1, GetIndexOutput, [0]] # 5-P3/8
+  - [4, 1, GetIndexOutput, [1]] # 6-P4/16
+  - [4, 1, GetIndexOutput, [2]] # 7-P5/32
+
+  # [ch_out, block_type, block_nums, stage_num, act, variant]
+  - [3, 1, Blocks, [64, BasicBlock, 2, 2, 'relu']] # 8
+  - [-1, 1, Blocks, [128, BasicBlock, 2, 3, 'relu']] # 9-P3/8
+  - [[5, -1], 1, ConvEdgeFusion, [128]] # 10-P3/8
+  - [-1, 1, Blocks, [256, BasicBlock, 2, 4, 'relu']] # 11-P4/16
+  - [[6, -1], 1, ConvEdgeFusion, [256]] # 12-P4/16
+  - [-1, 1, Blocks, [512, BasicBlock, 2, 5, 'relu']] # 13-P5/32
+  - [[7, -1], 1, ConvEdgeFusion, [512]] # 14-P5/32
+
+head:
+  - [-1, 1, Conv, [256, 1, 1, None, 1, 1, False]]  # 15 input_proj.2
+   [-1, 1, AIFI, [1024, 8]] # 16
+  - [-1, 1, Conv, [256, 1, 1]]  # 17, Y5, lateral_convs.0
+
+  - [10, 1, Conv, [head_channel]]  # 18-P3/8
+  - [12, 1, Conv, [head_channel]]  # 19-P4/16
+
+  - [[-1, 17], 1, WUFF, []] # 20
+  - [-1, 3, node_mode, [head_channel, 0.5]] # 21-P4/16
+  - [-1, 1, Conv, [head_channel]] #22
+
+  - [[18, -1], 1, WUFF, []] # 23 P4->P3
+  - [-1, 3, node_mode, [head_channel, 0.5]]  #24
+
+  - [8, 1, Conv, [head_channel, 3, 2]] # 25
+  - [[-1, 18, 24], 1, Fusion, [fusion_mode]] # 26
+  - [-1, 3, node_mode, [head_channel, 0.5]] # 27-P3/8
+
+
+  - [-1, 1, WDM, [256]] # 28 P3->P4
+  - [[-1, 22, 19], 1, Fusion, [fusion_mode]] # 29
+  - [-1, 3, node_mode, [head_channel, 0.5]] # 30-P4/16
+
+  - [-1, 1, WDM, [256]] # 31 P4->P5
+  - [[-1, 17], 1, Fusion, [fusion_mode]] # 32
+  - [-1, 3, node_mode, [head_channel, 0.5]] # 33-P5/32
+
+  - [[5, 27], 1, ConvEdgeFusion, [256]] # 34-P3/8
+  - [[6, 30], 1, ConvEdgeFusion, [256]] # 35-P4/16
+  - [[7, 33], 1, ConvEdgeFusion, [256]] # 36-P5/32
+
+  - [[34, 35, 36], 1, RTDETRDecoder, [nc, 256, 300, 4, 8, 3]]  # Detect(P3, P4, P5)
